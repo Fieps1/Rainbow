@@ -1,7 +1,8 @@
 from unityagents import UnityEnvironment
 import numpy as np
 
-env = UnityEnvironment(file_name="/home/philipp/udacity/deep-reinforcement-learning/p1_navigation/Banana_Linux/Banana.x86_64")
+env = UnityEnvironment(
+    file_name="/home/philipp/udacity/deep-reinforcement-learning/p1_navigation/Banana_Linux/Banana.x86_64")
 
 
 # get the default brain
@@ -19,7 +20,7 @@ print('Number of agents:', len(env_info.agents))
 action_size = brain.vector_action_space_size
 print('Number of actions:', action_size)
 
-# examine the state space 
+# examine the state space
 state = env_info.vector_observations[0]
 print('States look like:', state)
 state_size = len(state)
@@ -30,7 +31,8 @@ state = env_info.vector_observations[0]  # get the current state
 score = 0  # initialize the score
 while True:
     action = np.random.randint(action_size)  # select an action
-    env_info = env.step(action)[brain_name]  # send the action to the environment
+    # send the action to the environment
+    env_info = env.step(action)[brain_name]
     next_state = env_info.vector_observations[0]  # get the next state
     reward = env_info.rewards[0]  # get the reward
     done = env_info.local_done[0]  # see if episode has finished
@@ -40,7 +42,6 @@ while True:
         break
 
 print("Score: {}".format(score))
-
 
 
 env.close()
