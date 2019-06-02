@@ -97,7 +97,7 @@ action_space = env.action_space()
 
 
 # Agent
-dqn = Agent(args, env)
+dqn = Agent(args, action_space)
 mem = ReplayMemory(args, args.memory_capacity)
 priority_weight_increase = (1 - args.priority_weight) / \
     (args.T_max - args.learn_start)
