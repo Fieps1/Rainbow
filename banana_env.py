@@ -22,14 +22,16 @@ class BananaEnvWrapper(object):
         print('Number of agents:', len(env_info.agents))
 
         # number of actions
-        self.action_size = brain.vector_action_space_size
-        print('Number of actions:', self.action_size)
+        self._action_space = brain.vector_action_space_size
+        print('Number of actions:', self._action_space)
 
         # examine the state space
         state = env_info.vector_observations[0]
         print('States look like:', state)
         state_size = len(state)
         print('States have length:', state_size)
+
+        self.score = 0
 
     def eval(self):
         self.train_mode = False
@@ -38,6 +40,8 @@ class BananaEnvWrapper(object):
         self.train_mode = True
 
     def reset(self):
+        print("Score: %d" % self.score)
+        self.score = 0
         env_info = self.unity_env.reset(train_mode=self.train_mode)[self.brain_name]
         return env_info.vector_observations[0]  # Return current state
 
@@ -46,10 +50,14 @@ class BananaEnvWrapper(object):
         state = env_info.vector_observations[0]  # get the current state
         reward = env_info.rewards[0]  # get the reward
         done = env_info.local_done[0]  # see if episode has finished
+        self.score += reward  # update the score
         return state, reward, done
 
     def close(self):
         self.unity_env.close()
+
+    def action_space(self):
+        return self._action_space
 
 
 if __name__ == '__main__':
@@ -58,7 +66,7 @@ if __name__ == '__main__':
 
     score = 0  # initialize the score
     while True:
-        action = np.random.randint(env.action_size)  # select an action
+        action = np.random.randint(env.action_space())  # select an action
         next_state, reward, done = env.step(action)
 
         score += reward  # update the score

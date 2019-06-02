@@ -5,6 +5,7 @@ import torch
 
 from agent import Agent
 from env import Env
+from banana_env import BananaEnvWrapper
 from memory import ReplayMemory
 from test import test
 from tqdm import tqdm
@@ -91,7 +92,8 @@ def log(s):
 
 
 # Environment
-env = Env(args)
+# env = Env(args)
+env = BananaEnvWrapper()
 env.train()
 action_space = env.action_space()
 
