@@ -48,7 +48,15 @@ class NoisyLinear(nn.Module):
             return F.linear(input, self.weight_mu, self.bias_mu)
 
 
-class DQN(nn.Module):
+class NoiseResetMixin(object):
+
+    def reset_noise(self):
+        for name, module in self.named_children():
+            if 'fc' in name:
+                module.reset_noise()
+
+
+class DQN(nn.Module, NoiseResetMixin):
     def __init__(self, args, action_space):
         super().__init__()
         self.atoms = args.atoms
@@ -84,7 +92,35 @@ class DQN(nn.Module):
             q = F.softmax(q, dim=2)
         return q
 
-    def reset_noise(self):
-        for name, module in self.named_children():
-            if 'fc' in name:
-                module.reset_noise()
+
+class BananaDQN(nn.Module, NoiseResetMixin):
+    INPUT_SIZE = 37
+
+    def __init__(self, args, action_space):
+        super().__init__()
+        self.atoms = args.atoms
+        self.action_space = action_space
+
+        self.fc_h_v = NoisyLinear(
+            self.INPUT_SIZE, args.hidden_size, std_init=args.noisy_std)
+        self.fc_h_a = NoisyLinear(
+            self.INPUT_SIZE, args.hidden_size, std_init=args.noisy_std)
+        self.fc_z_v = NoisyLinear(
+            args.hidden_size, self.atoms, std_init=args.noisy_std)
+        self.fc_z_a = NoisyLinear(
+            args.hidden_size, action_space * self.atoms, std_init=args.noisy_std)
+
+    def forward(self, x, log=False):
+        x = x.view(-1, self.INPUT_SIZE)
+        v = self.fc_z_v(F.relu(self.fc_h_v(x)))  # Value stream
+        a = self.fc_z_a(F.relu(self.fc_h_a(x)))  # Advantage stream
+        v, a = v.view(-1, 1, self.atoms), a.view(-1,
+                                                 self.action_space, self.atoms)
+        q = v + a - a.mean(1, keepdim=True)  # Combine streams
+        if log:  # Use log softmax for numerical stability
+            # Log probabilities with action over second dimension
+            q = F.log_softmax(q, dim=2)
+        else:
+            # Probabilities with action over second dimension
+            q = F.softmax(q, dim=2)
+        return q

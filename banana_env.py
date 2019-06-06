@@ -1,13 +1,19 @@
+import torch
+
 from unityagents import UnityEnvironment
 import numpy as np
 
 
 class BananaEnvWrapper(object):
+
+    blank_state = torch.zeros(1, 37, dtype=torch.uint8)
+
     """ Wraps the udacity enviroment into an object behaving like an atari env
     """
 
-    def __init__(self, train_mode=True):
+    def __init__(self, train_mode=True, device='cuda'):
         self.train_mode = train_mode
+        self.device = device
         self.unity_env = UnityEnvironment(
             file_name="/home/philipp/udacity/deep-reinforcement-learning/p1_navigation/Banana_Linux/Banana.x86_64")
 
@@ -43,7 +49,7 @@ class BananaEnvWrapper(object):
         print("Score: %d" % self.score)
         self.score = 0
         env_info = self.unity_env.reset(train_mode=self.train_mode)[self.brain_name]
-        return env_info.vector_observations[0]  # Return current state
+        return self._wrap_state(env_info.vector_observations[0])  # Return current state
 
     def step(self, action):
         env_info = self.unity_env.step(action)[self.brain_name]
@@ -51,13 +57,18 @@ class BananaEnvWrapper(object):
         reward = env_info.rewards[0]  # get the reward
         done = env_info.local_done[0]  # see if episode has finished
         self.score += reward  # update the score
-        return state, reward, done
+        return self._wrap_state(state), reward, done
 
     def close(self):
         self.unity_env.close()
 
     def action_space(self):
         return self._action_space
+
+    def _wrap_state(self, state):
+        state = state[np.newaxis, np.newaxis, :]
+        # todo: Normalization
+        return torch.tensor(state, dtype=torch.float32, device=self.device)
 
 
 if __name__ == '__main__':

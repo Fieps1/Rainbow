@@ -7,6 +7,7 @@ from agent import Agent
 from env import Env
 from banana_env import BananaEnvWrapper
 from memory import ReplayMemory
+from model import BananaDQN
 from test import test
 from tqdm import tqdm
 
@@ -99,14 +100,14 @@ action_space = env.action_space()
 
 
 # Agent
-dqn = Agent(args, action_space)
-mem = ReplayMemory(args, args.memory_capacity)
+dqn = Agent(args, action_space, model=BananaDQN)
+mem = ReplayMemory(args, args.memory_capacity, env.blank_state)
 priority_weight_increase = (1 - args.priority_weight) / \
     (args.T_max - args.learn_start)
 
 
 # Construct validation memory
-val_mem = ReplayMemory(args, args.evaluation_size)
+val_mem = ReplayMemory(args, args.evaluation_size, env.blank_state)
 T, done = 0, True
 while T < args.evaluation_size:
     if done:

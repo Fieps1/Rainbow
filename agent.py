@@ -3,11 +3,11 @@ import numpy as np
 import torch
 from torch import optim
 
-from model import DQN
+from model import DQN, BananaDQN
 
 
 class Agent():
-    def __init__(self, args, action_space):
+    def __init__(self, args, action_space, model=DQN):
         self.action_space = action_space
         self.atoms = args.atoms
         self.Vmin = args.V_min
@@ -19,14 +19,14 @@ class Agent():
         self.n = args.multi_step
         self.discount = args.discount
 
-        self.online_net = DQN(args, self.action_space).to(device=args.device)
+        self.online_net = model(args, self.action_space).to(device=args.device)
         if args.model and os.path.isfile(args.model):
             # Always load tensors onto CPU by default, will shift to GPU if necessary
             self.online_net.load_state_dict(
                 torch.load(args.model, map_location='cpu'))
         self.online_net.train()
 
-        self.target_net = DQN(args, self.action_space).to(device=args.device)
+        self.target_net = model(args, self.action_space).to(device=args.device)
         self.update_target_net()
         self.target_net.train()
         for param in self.target_net.parameters():

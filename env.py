@@ -5,7 +5,9 @@ import cv2
 import torch
 
 
-class Env():
+class Env(object):
+    blank_state = torch.zeros(84, 84, dtype=torch.uint8)
+
     def __init__(self, args):
         self.device = args.device
         self.ale = atari_py.ALEInterface()
